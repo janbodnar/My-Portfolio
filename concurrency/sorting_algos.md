@@ -167,7 +167,172 @@ if __name__ == "__main__":
     main()
 ```
 
+## Multiprocessing in CLI
 
+```python
+import time
+import random
+import multiprocessing as mp
+
+# Initialize array globally
+array = [random.randint(1, 1000) for _ in range(5000)]
+
+# Sorting algorithms
+def quick_sort(arr):
+    print('quick sort started')
+    start_time = time.time()
+
+    def partition(arr, low, high):
+        i = low - 1
+        pivot = arr[high]
+        for j in range(low, high):
+            if arr[j] <= pivot:
+                i += 1
+                arr[i], arr[j] = arr[j], arr[i]
+        arr[i + 1], arr[high] = arr[high], arr[i + 1]
+        return i + 1
+
+    def quicksort(arr, low, high):
+        if low < high:
+            pi = partition(arr, low, high)
+            quicksort(arr, low, pi - 1)
+            quicksort(arr, pi + 1, high)
+
+    if not arr:
+        return []
+    if len(arr) == 1:
+        return arr.copy()
+
+    arr_copy = arr.copy()
+    quicksort(arr_copy, 0, len(arr_copy) - 1)
+    print('quick sort finished')
+    end_time = time.time()
+    return arr_copy, end_time - start_time
+
+def insertion_sort(arr):
+    print('insertion sort started')
+    start_time = time.time()
+    
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and key < arr[j]:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+
+    print('insertion sort finished')
+    end_time = time.time()
+    return arr, end_time - start_time
+
+def radix_sort(arr):
+    print('radix sort started')
+    start_time = time.time()
+
+    def counting_sort(arr, exp1):
+        n = len(arr)
+        output = [0] * n
+        count = [0] * 10
+        for i in range(n):
+            index = arr[i] // exp1
+            count[index % 10] += 1
+        for i in range(1, 10):
+            count[i] += count[i - 1]
+        i = n - 1
+        while i >= 0:
+            index = arr[i] // exp1
+            output[count[index % 10] - 1] = arr[i]
+            count[index % 10] -= 1
+            i -= 1
+        for i in range(n):
+            arr[i] = output[i]
+
+    arr_copy = arr.copy()
+    max1 = max(arr_copy)
+    exp = 1
+    while max1 / exp >= 1:
+        counting_sort(arr_copy, exp)
+        exp *= 10
+
+    print('radix sort finished')
+    end_time = time.time()
+    return arr_copy, end_time - start_time
+
+def bubble_sort(arr):
+    print('bubble sort started')
+    start_time = time.time()
+    
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+
+    print('bubble sort finished')
+    end_time = time.time()
+    return arr, end_time - start_time
+
+def selection_sort(arr):
+    print('Selection sort started')
+    start_time = time.time()
+
+    for i in range(len(arr)):
+        min_idx = i
+        for j in range(i + 1, len(arr)):
+            if arr[min_idx] > arr[j]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+
+    print('Selection sort finished')
+    end_time = time.time()
+    return arr, end_time - start_time
+
+def sort_algorithm(algo_name, sort_func, input_array, queue):
+    result, runtime = sort_func(input_array.copy())
+    # Put results in queue to return to main process
+    queue.put((algo_name, result[:10], result[-10:], runtime))
+
+def start_sorting():
+    sort_functions = {
+        "Insertion Sort": insertion_sort,
+        "Radix Sort": radix_sort,
+        "Bubble Sort": bubble_sort,
+        "Quick Sort": quick_sort,
+        "Selection Sort": selection_sort
+    }
+    
+    processes = []
+    queue = mp.Queue()  # Queue to collect results from processes
+    
+    # Start all processes
+    for algo, func in sort_functions.items():
+        process = mp.Process(target=sort_algorithm, args=(algo, func, array, queue))
+        processes.append(process)
+        process.start()
+    
+    # Wait for all processes to finish and collect results
+    for process in processes:
+        process.join()
+    
+    # Retrieve results from queue
+    results = []
+    for _ in range(len(sort_functions)):
+        results.append(queue.get())
+    
+    # Print results
+    for algo_name, first_10, last_10, runtime in results:
+        print(algo_name, first_10, last_10, runtime)
+
+def main():
+    start_time = time.time()
+    start_sorting()
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f'total time: {total_time}')    
+
+if __name__ == "__main__":
+    main()
+```
 
 
 
