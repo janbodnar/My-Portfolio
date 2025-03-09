@@ -1,7 +1,177 @@
 # Concurrency with sorting algorithms
 
 
-## Threading with progress bars
+## Threading in CLI
+
+```python
+import time
+import random
+import threading
+
+# Initialize array globally
+array = [random.randint(1, 1000) for _ in range(5000)]
+
+def quick_sort(arr):
+    print('quick sort started')
+    start_time = time.time()
+
+    def partition(arr, low, high):
+        i = low - 1
+        pivot = arr[high]
+        for j in range(low, high):
+            if arr[j] <= pivot:
+                i += 1
+                arr[i], arr[j] = arr[j], arr[i]
+        arr[i + 1], arr[high] = arr[high], arr[i + 1]
+        return i + 1
+
+    def quicksort(arr, low, high):
+        if low < high:
+            pi = partition(arr, low, high)
+            quicksort(arr, low, pi - 1)
+            quicksort(arr, pi + 1, high)
+
+    if not arr:
+        return []
+    if len(arr) == 1:
+        return arr.copy()
+
+    arr_copy = arr.copy()  # Fresh copy for this thread
+    quicksort(arr_copy, 0, len(arr_copy) - 1)
+    print('quick sort finished')
+    end_time = time.time()
+    return arr_copy, end_time - start_time
+
+def insertion_sort(arr_copy):
+    print('insertion sort started')
+    start_time = time.time()
+    # arr_copy = arr.copy()
+    for i in range(1, len(arr_copy)):
+        key = arr_copy[i]
+        j = i - 1
+        while j >= 0 and key < arr_copy[j]:
+            arr_copy[j + 1] = arr_copy[j]
+            j -= 1
+        arr_copy[j + 1] = key
+
+    print('insertion sort finished')
+
+    end_time = time.time()
+    runtime = end_time - start_time
+    
+    return arr_copy, runtime
+
+
+
+def radix_sort(arr):
+    print('radix sort started')
+    start_time = time.time()
+
+    def counting_sort(arr, exp1):
+        n = len(arr)
+        output = [0] * n
+        count = [0] * 10
+        for i in range(n):
+            index = arr[i] // exp1
+            count[index % 10] += 1
+        for i in range(1, 10):
+            count[i] += count[i - 1]
+        i = n - 1
+        while i >= 0:
+            index = arr[i] // exp1
+            output[count[index % 10] - 1] = arr[i]
+            count[index % 10] -= 1
+            i -= 1
+        for i in range(n):
+            arr[i] = output[i]
+
+    arr_copy = arr.copy()  # Fresh copy for this thread
+    max1 = max(arr_copy)
+    exp = 1
+    while max1 / exp >= 1:
+        counting_sort(arr_copy, exp)
+        exp *= 10
+
+    print('radix sort finished')
+    end_time = time.time()
+    return arr_copy, end_time - start_time
+
+def bubble_sort(arr_copy):
+
+    print('bubble sort started')
+    start_time = time.time()
+    n = len(arr_copy)
+
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if arr_copy[j] > arr_copy[j + 1]:
+                arr_copy[j], arr_copy[j + 1] = arr_copy[j + 1], arr_copy[j]
+
+    print('bubble sort finished')
+
+    end_time = time.time()
+    runtime = end_time - start_time
+    
+    return arr_copy, runtime
+
+def selection_sort(arr_copy):
+
+    print('Selection sort started')
+    start_time = time.time()
+
+    for i in range(len(arr_copy)):
+        min_idx = i
+        for j in range(i + 1, len(arr_copy)):
+            if arr_copy[min_idx] > arr_copy[j]:
+                min_idx = j
+        arr_copy[i], arr_copy[min_idx] = arr_copy[min_idx], arr_copy[i]
+
+    print('Selection sort finished')
+    end_time = time.time()
+    runtime = end_time - start_time
+    
+    return arr_copy, runtime
+
+def sort_algorithm(algo_name, sort_func, input_array):
+    result, runtime = sort_func(input_array.copy())  # Pass a fresh copy
+    print(algo_name, result[:10], result[-10:], runtime)
+
+def start_sorting():
+    sort_functions = {
+        "Insertion Sort": insertion_sort,
+        "Radix Sort": radix_sort,
+        "Bubble Sort": bubble_sort,
+        "Quick Sort": quick_sort,
+        "Selection Sort": selection_sort
+    }
+    
+    threads = {}
+    # Start all threads with a fresh copy of the array
+    for algo, func in sort_functions.items():
+        thread = threading.Thread(target=sort_algorithm, args=(algo, func, array))
+        threads[algo] = thread
+        thread.start()
+    
+    # Wait for all threads to finish
+    for algo, thread in threads.items():
+        thread.join()
+
+def main():
+    start_time = time.time()
+    start_sorting()
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f'total time: {total_time}')    
+
+if __name__ == "__main__":
+    main()
+```
+
+
+
+
+
+## Threading with UI using progress bars
 
 Sorting is CPU-bound, so the overall so the sum of runtimes is not efficient.  
 Also to show progress with progressbars, the tasks are artificially delayed, which distorts 
