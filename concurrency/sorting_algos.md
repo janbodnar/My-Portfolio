@@ -562,7 +562,7 @@ if __name__ == "__main__":
     app.mainloop()
 ```
 
-## Solution with multiprocessing
+## Multiprocessing with UI
 
 The runtime of all tasks equals roughly to the runtime of the slowest one. It is truly parallel and more efficient.  
 On the other hand, it brings complexity.  
