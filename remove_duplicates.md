@@ -1,5 +1,7 @@
 # Remove duplicates from YAML config file
 
+The challenge in this script was to preserve the format of the YAML file.
+
 ```python
 import yaml
 import collections
@@ -43,9 +45,13 @@ def show_duplicate_titles(titles):
             print(k, v)
 
 
-def show_number_of_duplicates(titles):
-    print(len(titles))
-    print(len(set(titles)))
+def get_number_of_duplicates(titles):
+    n_titles = len(titles)
+    u_titles = len(set(titles))
+
+    delta = n_titles - u_titles
+
+    return delta
 
 
 def read_config_file(file_name):
@@ -63,24 +69,29 @@ def write_unique_data(file_name, unique_data):
 chat_completion_options = read_config_file(file_name)
 
 titles = load_titles()
-show_number_of_duplicates(titles)
-show_duplicate_titles(titles)
+n_duplicates = get_number_of_duplicates(titles)
 
-# Remove duplicates while preserving format
-uniques = []
-for option in chat_completion_options['chat_completions']:
-    if option not in uniques:
-        uniques.append(option)
+if n_duplicates > 0:
+    print(f"Number of duplicates: {n_duplicates}")
+    show_duplicate_titles(titles)
 
-print(len(uniques))
+    # Remove duplicates while preserving format
+    uniques = []
+    for option in chat_completion_options['chat_completions']:
+        if option not in uniques:
+            uniques.append(option)
 
-
-file_name2 = 'x_no_duplicates.yaml'
-yaml_data = convert_content_fields(chat_completion_options)
-write_unique_data(file_name2, yaml_data)
+    print(len(uniques))
 
 
-print("Unique entries written to x_no_duplicates.yaml with preserved format")
+    file_name2 = 'x_no_duplicates.yaml'
+    yaml_data = convert_content_fields(chat_completion_options)
+    write_unique_data(file_name2, yaml_data)
+
+    print("Unique entries written to x_no_duplicates.yaml with preserved format")
+
+else:
+    print('No duplicates found.')
 ```
 
 The YAML file:
